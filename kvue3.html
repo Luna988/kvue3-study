@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue3</title>
+  
+</head>
+<body>
+  <div id="app">
+    <h1>{{title}}</h1>
+  </div>
+  <script>
+    // 基本结构
+    const Vue = {
+      createApp(options){ // options: 根组件配置
+        // 返回 App 实例
+        return {
+          mount(selector){
+            // 宿主
+            const parent = document.querySelector(selector)
+            // 获取渲染函数，编译结果
+            if(!options.render){
+              options.render = this.compile(parent.innerHTML)
+            }
+
+            if(options.setup){
+              this.setupState = options.setup()
+            }
+            this.data = options.data()
+
+            this.proxy = new Proxy(this,{
+              // 代理目标和访问的key
+              // target指的是app
+              get(target,key){
+                if(key in target.setupState){
+                  return target.setupState[key]
+                }else{
+                  return target.data[key]
+                }
+              },
+              set(target,key,val){
+                if(key in target.setupState){
+                  target.setupState[key] = val
+                }else{
+                  target.data[key] = val
+                }
+              }
+            })
+            // 渲染真实dom，追加到宿主元素
+            const el = options.render.call(this.proxy)
+            parent.innerHTML = ''
+            parent.appendChild(el)
+          },
+          compile(template){
+            // 返回render
+            return function render(){
+              // 描述视图
+              const h3 = document.createElement('h3')
+              h3.textContent = this.title
+              return h3
+            }
+          }
+        }
+      }
+      
+    }
+  </script>
+  <script>
+    const { createApp } = Vue
+    const app = createApp({
+      // 统一api，一致性
+      data(){
+        return {
+          title: 'hello，vue3！'
+        }
+      },
+      setup(){
+        return {
+          title: 'vue3,hello!'
+        }
+      }
+    })
+    app.mount('#app')
+  </script>
+</body>
+</html>
