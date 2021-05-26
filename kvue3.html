@@ -11,7 +11,35 @@
   <div id="app">
     <h1>{{title}}</h1>
   </div>
+  <script src="./reactive.js"></script>
   <script>
+    // const isObject = v => typeof v === 'object' && v !== null
+
+    function reactive(obj){
+      if(!isObject){
+        return obj
+      }
+      return new Proxy(obj,{
+        get(target,key){
+          console.log('get',key)
+          const res = Reflect.get(target,key)
+          return isObject(res) ? reactive(res) : res
+        },
+        set(target,key,val){
+          console.log('set',key)
+          const res = Reflect.set(target,key,val)
+          app.update()
+          return res
+        },
+        deleteProperty(target,key){
+          console.log('deleteProperty', key)
+          const res = Reflect.deleteProperty(target,key)
+          app.update()
+          return res
+        }
+      })
+    }
+
     // 基本结构
     const Vue = {
       createApp(options){ // options: 根组件配置
@@ -49,9 +77,14 @@
               }
             })
             // 渲染真实dom，追加到宿主元素
-            const el = options.render.call(this.proxy)
-            parent.innerHTML = ''
-            parent.appendChild(el)
+
+            this.update = effect(() => {
+              const el = options.render.call(this.proxy)
+              parent.innerHTML = ''
+              parent.appendChild(el)
+              // insert(el, parent)
+            })
+            // this.update() // init
           },
           compile(template){
             // 返回render
@@ -77,9 +110,14 @@
         }
       },
       setup(){
-        return {
+        const state = reactive({
           title: 'vue3,hello!'
-        }
+        })
+
+        setTimeout(() => {
+          state.title = 'hello,vue3!'
+        },2000)
+        return state
       }
     })
     app.mount('#app')

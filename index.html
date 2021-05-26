@@ -10,12 +10,14 @@
 <body>
   <div id="app">
     <h1>{{title}}</h1>
-    <h2>{{state.title}}</h2>
+    <h2>{{name}}---</h2>
+    <!-- <h2>{{state.title}}</h2> -->
+    <h3>{{title2}}</h3>
     <comp></comp>
   </div>
   <script src="https://unpkg.com/vue@next"></script>
   <script>
-    const { createApp, reactive } = Vue
+    const { createApp, reactive,toRefs, ref } = Vue
     // new Vue
     // Vue.component
     // 函数式: 类型支持ts，摇树优化，打包体积减小
@@ -32,9 +34,17 @@
       },
       setup(){
         const state = reactive({
-          title: 'Vue3, hello!'
+          title: 'Vue3, hello!',
+          name: 'zhangsan'
         })
-        return {state}
+        setTimeout(() => {
+          state.title = 'hello,vue3!..'
+        },2000)
+        const title2 = ref('nihao!')
+        setTimeout(() => {
+          title2.value = '嗯哼？hello,vue3!..'
+        },2000)
+        return {...toRefs(state), title2}
       }
     })
     //  全局组件
